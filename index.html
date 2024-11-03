@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>splattered egg</title>
+        <style>
+            :root {
+                --bg-color: #18181b;
+                --card-bg: #27272a;
+                --border-color: #3f3f46;
+                --text-primary: #ffffff;
+                --text-secondary: #a1a1aa;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                background-color: var(--bg-color);
+                color: var(--text-primary);
+                line-height: 1.6;
+                padding: 2rem 1rem;
+            }
+
+            .container {
+                max-width: 42rem;
+                margin: 0 auto;
+            }
+
+            header {
+                margin-bottom: 3rem;
+            }
+
+            header h1 {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            header p {
+                color: var(--text-secondary);
+            }
+
+            .post-card {
+                background-color: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 0.5rem;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                transition: transform 0.2s ease;
+            }
+
+            .post-card:hover {
+                transform: translateY(-2px);
+            }
+
+            .post-date {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+                margin-bottom: 0.5rem;
+            }
+
+            .post-title {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .post-excerpt {
+                color: var(--text-secondary);
+                margin-bottom: 1rem;
+            }
+
+            .read-more {
+                color: var(--text-primary);
+                text-decoration: none;
+                font-weight: 500;
+            }
+
+            .read-more:hover {
+                text-decoration: underline;
+            }
+
+            footer {
+                margin-top: 3rem;
+                padding-top: 1.5rem;
+                border-top: 1px solid var(--border-color);
+                text-align: center;
+                color: var(--text-secondary);
+                font-size: 0.875rem;
+            }
+
+            @media (max-width: 768px) {
+                body {
+                    padding: 1rem;
+                }
+
+                header h1 {
+                    font-size: 2rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>splattered egg/h1>
+                <p>...</p>
+            </header>
+
+            <main id="posts">
+                <!-- Posts will be dynamically loaded here -->
+            </main>
+
+            <footer>
+                <p>:3</p>
+            </footer>
+        </div>
+
+        <script>
+            async function loadPosts() {
+                try {
+                    const response = await fetch(
+                        "https://api.github.com/repos/arxari/blog/contents/posts",
+                    );
+                    const files = await response.json();
+
+                    const sortedFiles = files
+                        .filter((file) => file.name.endsWith(".md"))
+                        .sort((a, b) => b.name.localeCompare(a.name));
+
+                    const postsContainer = document.getElementById("posts");
+
+                    for (const file of sortedFiles) {
+                        const postResponse = await fetch(file.download_url);
+                        const postContent = await postResponse.text();
+
+                        const [date, ...titleParts] = file.name
+                            .replace(".md", "")
+                            .split("-");
+                        const title = titleParts.join(" ");
+
+                        const postCard = document.createElement("article");
+                        postCard.className = "post-card";
+                        postCard.innerHTML = `
+                        <div class="post-date">${formatDate(date)}</div>
+                        <h2 class="post-title">${title}</h2>
+                        <p class="post-excerpt">${getExcerpt(postContent)}</p>
+                        <a href="posts/${file.name}" class="read-more">Read more →</a>
+                    `;
+
+                        postsContainer.appendChild(postCard);
+                    }
+                } catch (error) {
+                    console.error("Error loading posts:", error);
+                }
+            }
+
+            function formatDate(dateStr) {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                });
+            }
+
+            function getExcerpt(content, maxLength = 150) {
+                const excerpt = content.split("\n")[0];
+                return excerpt.length > maxLength
+                    ? excerpt.substring(0, maxLength) + "..."
+                    : excerpt;
+            }
+
+            document.addEventListener("DOMContentLoaded", loadPosts);
+        </script>
+    </body>
+</html>
