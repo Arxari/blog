@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Post - Minimal Blog</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+        <style>
+            :root {
+                --bg-color: #18181b;
+                --card-bg: #27272a;
+                --border-color: #3f3f46;
+                --text-primary: #ffffff;
+                --text-secondary: #a1a1aa;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                background-color: var(--bg-color);
+                color: var(--text-primary);
+                line-height: 1.6;
+                padding: 2rem 1rem;
+            }
+
+            .container {
+                max-width: 42rem;
+                margin: 0 auto;
+            }
+
+            header {
+                margin-bottom: 3rem;
+            }
+
+            .back-link {
+                color: var(--text-secondary);
+                text-decoration: none;
+                display: inline-block;
+                margin-bottom: 2rem;
+            }
+
+            .back-link:hover {
+                text-decoration: underline;
+            }
+
+            .post-header {
+                margin-bottom: 2rem;
+            }
+
+            .post-title {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .post-date {
+                color: var(--text-secondary);
+                font-size: 0.875rem;
+            }
+
+            .post-content {
+                color: var(--text-secondary);
+                font-size: 1.125rem;
+            }
+
+            /* Markdown content styling */
+            .post-content h1,
+            .post-content h2,
+            .post-content h3,
+            .post-content h4,
+            .post-content h5,
+            .post-content h6 {
+                color: var(--text-primary);
+                margin: 1.5rem 0 1rem;
+            }
+
+            .post-content p {
+                margin-bottom: 1.25rem;
+            }
+
+            .post-content a {
+                color: #60a5fa;
+                text-decoration: none;
+            }
+
+            .post-content a:hover {
+                text-decoration: underline;
+            }
+
+            .post-content pre {
+                background-color: var(--card-bg);
+                padding: 1rem;
+                border-radius: 0.5rem;
+                overflow-x: auto;
+                margin: 1.5rem 0;
+            }
+
+            .post-content code {
+                font-family: "Menlo", "Monaco", "Courier New", monospace;
+                font-size: 0.875rem;
+            }
+
+            .post-content ul,
+            .post-content ol {
+                margin: 1rem 0;
+                padding-left: 1.5rem;
+            }
+
+            .post-content blockquote {
+                border-left: 3px solid var(--text-secondary);
+                padding-left: 1rem;
+                margin: 1.5rem 0;
+                font-style: italic;
+            }
+
+            footer {
+                margin-top: 3rem;
+                padding-top: 1.5rem;
+                border-top: 1px solid var(--border-color);
+                text-align: center;
+                color: var(--text-secondary);
+                font-size: 0.875rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <a href="index.html" class="back-link">← Back to all posts</a>
+                <div class="post-header">
+                    <h1 class="post-title" id="post-title"></h1>
+                    <div class="post-date" id="post-date"></div>
+                </div>
+            </header>
+
+            <main>
+                <article class="post-content" id="post-content">
+                    <!-- Post content will be loaded here -->
+                </article>
+            </main>
+
+            <footer>
+                <p>© 2024 Minimal Blog. All rights reserved.</p>
+            </footer>
+        </div>
+
+        <script>
+            async function loadPost() {
+                try {
+                    const urlParams = new URLSearchParams(
+                        window.location.search,
+                    );
+                    const postId = urlParams.get("id");
+
+                    const response = await fetch("posts/index.json");
+                    const posts = await response.json();
+                    const post = posts.find((p) => p.id === postId);
+
+                    if (!post) {
+                        throw new Error("Post not found");
+                    }
+
+                    document.title = `${post.title} - Minimal Blog`;
+                    document.getElementById("post-title").textContent =
+                        post.title;
+                    document.getElementById("post-date").textContent = new Date(
+                        post.date,
+                    ).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    });
+
+                    const contentResponse = await fetch(`posts/${postId}.md`);
+                    const content = await contentResponse.text();
+                    document.getElementById("post-content").innerHTML =
+                        marked.parse(content);
+                } catch (error) {
+                    console.error("Error loading post:", error);
+                    document.getElementById("post-content").innerHTML =
+                        "<p>Error loading post.</p>";
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", loadPost);
+        </script>
+    </body>
+</html>

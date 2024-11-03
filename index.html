@@ -1,9 +1,11 @@
+<!-- index.html -->
 <!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>splattered egg</title>
+        <title>Minimal Blog</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
         <style>
             :root {
                 --bg-color: #18181b;
@@ -72,21 +74,17 @@
             .post-title {
                 font-size: 1.5rem;
                 margin-bottom: 1rem;
+                color: var(--text-primary);
+                text-decoration: none;
+            }
+
+            .post-title:hover {
+                text-decoration: underline;
             }
 
             .post-excerpt {
                 color: var(--text-secondary);
                 margin-bottom: 1rem;
-            }
-
-            .read-more {
-                color: var(--text-primary);
-                text-decoration: none;
-                font-weight: 500;
-            }
-
-            .read-more:hover {
-                text-decoration: underline;
             }
 
             footer {
@@ -112,8 +110,8 @@
     <body>
         <div class="container">
             <header>
-                <h1>splattered egg</h1>
-                <p>...</p>
+                <h1>Minimal Blog</h1>
+                <p>Thoughts and musings in a minimal space</p>
             </header>
 
             <main id="posts">
@@ -121,63 +119,45 @@
             </main>
 
             <footer>
-                <p>:3</p>
+                <p>© 2024 Minimal Blog. All rights reserved.</p>
             </footer>
         </div>
 
         <script>
+            // Function to fetch and parse markdown files
             async function loadPosts() {
                 try {
-                    const response = await fetch(
-                        "https://api.github.com/repos/arxari/blog/contents/posts",
-                    );
-                    const files = await response.json();
-
-                    const sortedFiles = files
-                        .filter((file) => file.name.endsWith(".md"))
-                        .sort((a, b) => b.name.localeCompare(a.name));
-
                     const postsContainer = document.getElementById("posts");
 
-                    for (const file of sortedFiles) {
-                        const postResponse = await fetch(file.download_url);
-                        const postContent = await postResponse.text();
+                    // Get list of markdown files from the posts directory
+                    const response = await fetch("posts/index.json");
+                    const posts = await response.json();
 
-                        const [date, ...titleParts] = file.name
-                            .replace(".md", "")
-                            .split("-");
-                        const title = titleParts.join(" ");
+                    // Sort posts by date
+                    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+                    // Create post cards
+                    posts.forEach((post) => {
                         const postCard = document.createElement("article");
                         postCard.className = "post-card";
                         postCard.innerHTML = `
-                        <div class="post-date">${formatDate(date)}</div>
-                        <h2 class="post-title">${title}</h2>
-                        <p class="post-excerpt">${getExcerpt(postContent)}</p>
-                        <a href="posts/${file.name}" class="read-more">Read more →</a>
+                        <div class="post-date">${new Date(
+                            post.date,
+                        ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        })}</div>
+                        <a href="post.html?id=${post.id}" class="post-title">
+                            <h2>${post.title}</h2>
+                        </a>
+                        <p class="post-excerpt">${post.excerpt}</p>
                     `;
-
                         postsContainer.appendChild(postCard);
-                    }
+                    });
                 } catch (error) {
                     console.error("Error loading posts:", error);
                 }
-            }
-
-            function formatDate(dateStr) {
-                const date = new Date(dateStr);
-                return date.toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                });
-            }
-
-            function getExcerpt(content, maxLength = 150) {
-                const excerpt = content.split("\n")[0];
-                return excerpt.length > maxLength
-                    ? excerpt.substring(0, maxLength) + "..."
-                    : excerpt;
             }
 
             document.addEventListener("DOMContentLoaded", loadPosts);
